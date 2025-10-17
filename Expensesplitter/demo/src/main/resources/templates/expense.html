@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Expenses</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .form-section {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .expense-amount {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .small-muted {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Groups</a>
+
+        <h1>📝 Expense Management</h1>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <h2>Existing Expenses</h2>
+
+        <table th:if="${not #lists.isEmpty(expenses)}">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Paid By</th>
+                    <th>Shared With</th>
+                    <th>Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="expense : ${expenses}">
+                    <td th:text="${expense.description}">Groceries</td>
+                    <td class="expense-amount" th:text="'$' + ${#numbers.formatDecimal(expense.amount, 1, 2)}">$0.00</td>
+                    <td th:text="${expense.paidBy != null ? expense.paidBy.fullName : '—'}">Alice</td>
+                    <td>
+                        <span th:each="user, iterStat : ${expense.sharedWith}">
+                            <span th:text="${user.fullName}">Bob</span><span th:if="${!iterStat.last}">, </span>
+                        </span>
+                    </td>
+                    <td th:text="${expense.group != null ? expense.group.name : '—'}">Travel</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(expenses)}">
+            <p>💸 No expenses yet. Add your first expense below!</p>
+        </div>
+
+        <div class="form-section">
+            <h2>Add New Expense</h2>
+            <form th:action="@{/expenses/add}" method="post" id="expenseForm">
+                <div class="form-group">
+                    <label for="groupId">Select Group *</label>
+                    <select id="groupId" name="groupId" required th:attr="data-initial=${selectedGroupId}">
+                        <option value="">-- Choose a group --</option>
+                        <option th:each="group : ${groups}" th:value="${group.id}" th:text="${group.name}">Group</option>
+                    </select>
+                    <div class="small-muted">Choose the group the expense belongs to. Members will be loaded automatically.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <input type="text" id="description" name="description" placeholder="e.g., Groceries, Utilities, Dinner" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Amount ($) *</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
+                    <div class="small-muted">Minimum amount: $0.01</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="paidById">Paid By *</label>
+                    <select id="paidById" name="paidById" required>
+                        <option value="">-- Select who paid --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Split Between (leave empty to split among all group members)</label>
+                    <div class="checkbox-group" id="sharedWithCheckboxes">
+                        <div class="empty-state" id="noMembersMsg" style="display:none">No members in this group.</div>
+                    </div>
+                    <div class="small-muted" style="margin-top:8px;">All members are pre-checked. You may uncheck anyone who should not share this expense.</div>
+                </div>
+
+                <button type="submit" class="btn">Add Expense</button>
+            </form>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/summary" class="btn" style="display: inline-block; width: auto; padding: 14px 40px; text-decoration: none;">📊 View Settlement Summary</a>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function() {
+            const groupSelect = document.getElementById('groupId');
+            const paidBySelect = document.getElementById('paidById');
+            const sharedWithContainer = document.getElementById('sharedWithCheckboxes');
+            const noMembersMsg = document.getElementById('noMembersMsg');
+
+            function loadMembersForGroup(groupId) {
+                sharedWithContainer.innerHTML = '';
+                paidBySelect.innerHTML = '<option value="">-- Select who paid --</option>';
+
+                if (!groupId) {
+                    noMembersMsg.style.display = 'none';
+                    return;
+                }
+
+                fetch('/groups/' + groupId + '/members')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(members => {
+                        if (!members || members.length === 0) {
+                            noMembersMsg.style.display = 'block';
+                            return;
+                        }
+                        noMembersMsg.style.display = 'none';
+                        
+                        members.forEach(member => {
+                            const option = document.createElement('option');
+                            option.value = member.id;
+                            option.textContent = member.name;
+                            paidBySelect.appendChild(option);
+                            
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'checkbox-item';
+
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.name = 'sharedWithIds';
+                            checkbox.value = member.id;
+                            checkbox.id = 'user-' + member.id;
+                            checkbox.checked = true;
+
+                            const label = document.createElement('label');
+                            label.htmlFor = checkbox.id;
+                            label.style.display = 'inline';
+                            label.style.margin = '0';
+                            label.textContent = member.name;
+
+                            wrapper.appendChild(checkbox);
+                            wrapper.appendChild(label);
+                            sharedWithContainer.appendChild(wrapper);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Could not load group members', err);
+                        noMembersMsg.style.display = 'block';
+                        noMembersMsg.textContent = 'Could not load members. Please try again.';
+                    });
+            }
+
+            groupSelect.addEventListener('change', function() {
+                const groupId = this.value;
+                loadMembersForGroup(groupId);
+            });
+
+            const initialGroupId = groupSelect.getAttribute('data-initial');
+            if (initialGroupId) {
+                groupSelect.value = initialGroupId;
+                loadMembersForGroup(initialGroupId);
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>
